@@ -3,11 +3,11 @@
   "main": "index.js",
   "compatibility_date": "2024-01-01",
   "vars": {
-    "APPS": "iRich,iDeepa",
-    "BARK_SOUND": "sherwoodforest",
-    "PRODUCT_NAME_iRich": "iRich",
-    "PRODUCT_NAME_iDeepa": "iDeepa",
-    "BARK_ICON_iRich": "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/b2/9d/22/b29d22a0-f3fe-86ea-85b1-b67ea1653c76/Placeholder.mill/400x400bb-75.webp",
-    "BARK_ICON_iDeepa": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/77/6b/b6/776bb639-94e1-347d-3d07-3566cfc54018/AppIcon-0-0-1x_U007ephone-0-1-85-220.png/360x360ia.png"
+    "APPS": "shortcuts,jikeimg",
+    "ENABLE_SANDBOX": "true",
+    "PRODUCT_NAME_shortcuts": "捷径扩展",
+    "PRODUCT_NAME_jikeimg": "即刻图床",
+    "BARK_ICON_shortcuts": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/85/78/26/85782660-5f51-c990-e3b8-f6d291c78286/AppIcon-0-0-1x_U007epad-0-1-85-220.png/1024x1024bb.jpg",
+    "BARK_ICON_jikeimg": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/85/e9/b9/85e9b967-5396-4ce0-2dd5-84d272d95093/AppIcon-0-0-1x_U007epad-0-1-0-85-220.png/1024x1024bb.jpg"
   }
 }

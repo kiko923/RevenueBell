@@ -98,6 +98,7 @@ NOTIFICATION_CONFIG_iRich={"RISK":{"enabled":false}}
 全局配置：
 
 ```txt
+ENABLE_SANDBOX=true
 NOTIFICATION_CONFIG={"REVENUE":{"enabled":true},"REFUND":{"enabled":true},"RISK":{"enabled":true},"STATUS":{"enabled":true}}
 BARK_SOUND=sherwoodforest
 BARK_SOUND_REVENUE=calypso

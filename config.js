@@ -14,6 +14,7 @@
  *
  * - 全局配置：
  *   - BARK_KEY: 全局 Bark Key（所有应用共用）
+ *   - ENABLE_SANDBOX: 全局测试环境开关 ("true" 或 "false")
  *   - NOTIFICATION_CONFIG: 全局通知类型配置 (JSON 字符串)
  *   - BARK_SOUND: 默认提示音（作为保底）
  *   - BARK_SOUND_REVENUE: 收入通知提示音
@@ -95,13 +96,17 @@ export function getAppConfig(appName, env) {
     return env?.[`${prefix}_${matchedApp}`];
   };
 
+  const appEnableSandbox = getEnvVar('ENABLE_SANDBOX');
+
   const result = {
     productName: getEnvVar('PRODUCT_NAME') || matchedApp,
     // BARK_KEY: 先找 BARK_KEY_appname，再找全局 BARK_KEY
     barkKey: getEnvVar('BARK_KEY') || env?.BARK_KEY || DEFAULT_APP_CONFIG.barkKey,
     barkIcon: getEnvVar('BARK_ICON') || DEFAULT_APP_CONFIG.barkIcon,
     forwardUrl: getEnvVar('FORWARD_URL') || DEFAULT_APP_CONFIG.forwardUrl,
-    enableSandbox: getEnvVar('ENABLE_SANDBOX') === "true",
+    enableSandbox: appEnableSandbox !== undefined
+      ? appEnableSandbox === "true"
+      : env?.ENABLE_SANDBOX === "true",
     notifications: getNotificationConfig(getEnvVar('NOTIFICATION_CONFIG'), env)
   };
 
