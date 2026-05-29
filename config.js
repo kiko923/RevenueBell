@@ -10,6 +10,7 @@
  *   - BARK_ICON_appname: 通知图标 URL
  *   - FORWARD_URL_appname: 转发 URL
  *   - ENABLE_SANDBOX_appname: 测试环境开关 ("true" 或 "false")
+ *   - NOTIFICATION_CONFIG_appname: 应用级通知类型配置 (JSON 字符串)
  *
  * - 全局配置：
  *   - BARK_KEY: 全局 Bark Key（所有应用共用）
@@ -41,19 +42,19 @@ export const DEFAULT_NOTIFICATION_CONFIG = {
     group: "Revenue"
   },
   REFUND: {
-    enabled: false,
+    enabled: true,
     icon: "",
     sound: "minuet",
     group: "Refund"
   },
   RISK: {
-    enabled: false,
+    enabled: true,
     icon: "",
     sound: "chord",
     group: "Risk"
   },
   STATUS: {
-    enabled: false,
+    enabled: true,
     icon: "",
     sound: "popcorn",
     group: "Status"
@@ -101,7 +102,7 @@ export function getAppConfig(appName, env) {
     barkIcon: getEnvVar('BARK_ICON') || DEFAULT_APP_CONFIG.barkIcon,
     forwardUrl: getEnvVar('FORWARD_URL') || DEFAULT_APP_CONFIG.forwardUrl,
     enableSandbox: getEnvVar('ENABLE_SANDBOX') === "true",
-    notifications: getNotificationConfig(null, env)
+    notifications: getNotificationConfig(getEnvVar('NOTIFICATION_CONFIG'), env)
   };
 
   return result;
@@ -130,7 +131,7 @@ export function getAppsConfig(env) {
  * @returns {object} 合并后的通知配置
  */
 export function getNotificationConfig(appNotifications, env) {
-  let config = { ...DEFAULT_NOTIFICATION_CONFIG };
+  let config = deepMerge({}, DEFAULT_NOTIFICATION_CONFIG);
 
   // 先合并全局环境变量配置
   if (env?.NOTIFICATION_CONFIG) {
@@ -144,7 +145,14 @@ export function getNotificationConfig(appNotifications, env) {
 
   // 再合并应用级配置
   if (appNotifications) {
-    config = deepMerge(config, appNotifications);
+    try {
+      const parsedAppConfig = typeof appNotifications === 'string'
+        ? JSON.parse(appNotifications)
+        : appNotifications;
+      config = deepMerge(config, parsedAppConfig);
+    } catch (e) {
+      console.error("App NOTIFICATION_CONFIG parse error:", e);
+    }
   }
 
   // 最后处理 BARK_SOUND 环境变量（优先级最高）

@@ -63,7 +63,7 @@ export function renderAppListHtml(baseUrl, env) {
 
   let appListHtml = '';
   if (appList.length === 0) {
-    appListHtml = '<p style="color: #d1180b;">未配置任何应用，请设置 APPS_CONFIG 环境变量</p>';
+    appListHtml = '<p style="color: #d1180b;">未配置任何应用，请设置 APPS 环境变量</p>';
   } else {
     appListHtml = '<ul class="app-list">';
     for (const appName of appList) {
@@ -102,7 +102,7 @@ export function renderAppListHtml(baseUrl, env) {
     <div class="url-box">
       <h3>📖 使用说明</h3>
       <p style="text-align: left; line-height: 1.8;">
-        1. 设置 <code>APPS_CONFIG</code> 环境变量配置应用<br>
+        1. 设置 <code>APPS</code> 环境变量配置应用<br>
         2. 在 App Store Connect 中配置通知 URL：<br>
         <code>${baseUrl}/应用名称</code>
       </p>

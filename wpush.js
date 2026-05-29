@@ -9,6 +9,8 @@
  * - ENABLE_SANDBOX_NOTIFICATIONS: 是否推送测试环境通知 ("true" 或 "false")
  * - FORWARD_URL: 转发通知的目标 URL（可选）
  * - NOTIFICATION_CONFIG: 通知类型配置 (JSON 字符串)，可配置各类通知的开关、图标、声音等
+ * - BARK_SOUND: 默认提示音（可选）
+ * - BARK_SOUND_REVENUE / REFUND / RISK / STATUS: 单独覆盖某类通知提示音（可选）
  */
 const PRODUCT_NAME = "iRich"; // 提示：替换为你的产品名称
 const BARK_KEY = ""; // ⚠️ 替换为你的 Key
@@ -31,21 +33,21 @@ const NOTIFICATION_CONFIG = {
   },
   // 退款通知
   REFUND: {
-    enabled: false,
+    enabled: true,
     icon: "",
     sound: "minuet",
     group: "Refund"
   },
   // 风险预警 (续订失败、过期等)
   RISK: {
-    enabled: false,
+    enabled: true,
     icon: "",
     sound: "chord",
     group: "Risk"
   },
   // 状态变更通知 (自动续订开关、计划变更等)
   STATUS: {
-    enabled: false,
+    enabled: true,
     icon: "",
     sound: "popcorn",
     group: "Status"
@@ -295,15 +297,30 @@ function deepMerge(target, source) {
  * 获取通知配置（合并环境变量覆盖）
  */
 function getNotificationConfig(env) {
+  let config = deepMerge({}, NOTIFICATION_CONFIG);
+
   if (env?.NOTIFICATION_CONFIG) {
     try {
       const envConfig = JSON.parse(env.NOTIFICATION_CONFIG);
-      return deepMerge(NOTIFICATION_CONFIG, envConfig);
+      config = deepMerge(config, envConfig);
     } catch (e) {
       console.error("NOTIFICATION_CONFIG parse error:", e);
     }
   }
-  return NOTIFICATION_CONFIG;
+
+  const defaultSound = env?.BARK_SOUND;
+  const categories = ['REVENUE', 'REFUND', 'RISK', 'STATUS'];
+
+  for (const category of categories) {
+    const categorySound = env?.[`BARK_SOUND_${category}`];
+    if (categorySound) {
+      config[category].sound = categorySound;
+    } else if (defaultSound) {
+      config[category].sound = defaultSound;
+    }
+  }
+
+  return config;
 }
 
 /**

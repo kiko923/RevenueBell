@@ -1,123 +1,192 @@
-# RevenueBell 🔔
+# RevenueBell
 
-**RevenueBell** 是一个轻量级的 Cloudflare Worker 脚本，专门用于接收 Apple App Store Server Notifications V2 并实时推送收入通知到你的手机（通过 Bark）。
+RevenueBell 是一个轻量级的 Cloudflare Worker，用于接收 Apple App Store Server Notifications V2，并通过 Bark 把收入、退款、风险预警、状态变更通知推送到你的设备。
 
-每当用户在你的 iOS/macOS 应用中产生订阅、续订、购买等收入事件时，RevenueBell 会立即将通知发送到你的设备，让你第一时间掌握应用收入动态。
+项目同时支持两种部署方式：
 
+- 单应用版：复制 `wpush.js` 到 Cloudflare Dashboard，适合只接一个 App。
+- 多应用版：使用 `wrangler.jsonc` + `index.js`，适合一个 Worker 同时接多个 App。
 
+默认情况下，四类通知都会推送：收入通知、退款通知、风险预警、状态变更。
 
-## 🚀 快速开始
+## 快速开始
 
 ### 前置要求
 
-1. **Cloudflare 账号**（免费）：https://dash.cloudflare.com/sign-up
-2. **Bark App**（免费）：从 App Store 下载 Bark，获取推送 Key
+1. Cloudflare 账号：https://dash.cloudflare.com/sign-up
+2. Bark App：从 App Store 下载 Bark，并获取推送 Key
    - App Store 链接：https://apps.apple.com/cn/app/bark/id1403753865
-   - 打开 Bark 后，会显示类似 `yirE82xxxxxxxxxxxx` 的 Key
+   - Bark Key 通常类似 `yirE82xxxxxxxxxxxx`
 
-### 部署步骤
+## 方式一：单应用版
 
-#### 通过 Cloudflare Dashboard（推荐新手）
+适合只部署一个 App。README 原来的教程就是这个方式。
 
-1. **登录 Cloudflare Dashboard**
-   - 访问：https://dash.cloudflare.com/
-   - 选择 `Workers & Pages` → `Create application` → `Create Worker`
+### 通过 Cloudflare Dashboard 部署
 
-   ![创建 Worker](screenshots/1.jpg)
+1. 登录 Cloudflare Dashboard：https://dash.cloudflare.com/
+2. 进入 `Workers & Pages` -> `Create application` -> `Create Worker`
+3. 创建 Worker 后点击 `Edit code`
+4. 将 `wpush.js` 的全部内容复制粘贴到编辑器中
+5. 点击右上角 `Deploy`
 
-2. **创建 Worker**
-   - 选择 `Start with Hello World!`
+### 单应用环境变量
 
-   ![选择模板](screenshots/2.jpg)
+在 Worker 详情页进入 `Settings` -> `Variables and Secrets`，添加：
 
-   - 给 Worker 命名（如 `revenuebell`）
-   - 点击 `Deploy` 创建
-
-   ![命名并部署](screenshots/3.jpg)
-
-3. **部署代码**
-   - 点击 `Edit code` 按钮
-
-   ![编辑代码](screenshots/4.jpg)
-
-   - 将 `wpush.js` 的全部内容复制粘贴到编辑器中（替换所有默认代码）
-   - 点击右上角 `Deploy` 按钮
-
-   ![粘贴代码并部署](screenshots/5.jpg)
-
-4. **配置环境变量**（推荐）
-   - 回到 Worker 详情页，点击 `Settings` → `Variables`
-   - 添加环境变量（所有配置项都支持环境变量）：
-     ```
-     PRODUCT_NAME = 你的产品名称（如：iRich）
-     BARK_KEY = 你的Bark推送Key（必填）
-     BARK_ICON = 你的应用图标URL（可选）
-     ENABLE_SANDBOX_NOTIFICATIONS = true 或 false（可选，是否推送测试环境通知）
-     ```
-   - 点击 `Save and Deploy`
-
-   > **提示**：使用环境变量的好处是无需修改代码，直接在 Cloudflare 后台配置即可，更方便管理。
-
-5. **修改代码配置**（如果不使用环境变量）
-   - 编辑代码中的配置区域（第 11-14 行）：
-   ```javascript
-   const PRODUCT_NAME = "你的产品名称";  // 修改为你的应用名
-   const BARK_KEY = "你的Bark推送Key";   // ⚠️ 必填：替换为你的 Key
-   const BARK_ICON = "你的应用图标URL";   // 可选：替换为你的图标
-   const ENABLE_SANDBOX_NOTIFICATIONS = false; // 可选：是否推送测试环境通知
-   ```
-
-   > **配置优先级**：环境变量 > 代码默认值。如果同时设置了环境变量和代码配置，将优先使用环境变量。
-
-### 获取 Worker URL
-
-部署成功后，你会得到一个类似这样的 URL：
-```
-https://revenuebell.你的用户名.workers.dev
+```txt
+PRODUCT_NAME=你的产品名称
+BARK_KEY=你的 Bark 推送 Key
+BARK_ICON=你的应用图标 URL
+ENABLE_SANDBOX_NOTIFICATIONS=false
 ```
 
-## 🔧 配置 App Store Connect
+可选变量：
 
-1. **登录 App Store Connect**
-   - 访问：https://appstoreconnect.apple.com/
+```txt
+FORWARD_URL=https://example.com/webhook
+NOTIFICATION_CONFIG={"REVENUE":{"enabled":true},"REFUND":{"enabled":true},"RISK":{"enabled":true},"STATUS":{"enabled":true}}
+BARK_SOUND=calypso
+BARK_SOUND_REVENUE=calypso
+BARK_SOUND_REFUND=minuet
+BARK_SOUND_RISK=chord
+BARK_SOUND_STATUS=popcorn
+```
 
-2. **配置服务器通知 URL**
-   - 进入 `App 信息` → `App Store 服务器通知`
-   - 将你的 Worker URL 粘贴到 `生产服务器 URL` 和 `沙盒服务器 URL`
-   - 选择通知版本：`Version 2`
+单应用版的 App Store Connect 通知 URL：
 
-   ![配置 App Store Connect](screenshots/7.jpg)
+```txt
+https://你的-worker.workers.dev
+```
 
-3. **保存配置**
-   - 点击保存后，Apple 会向你的 URL 发送测试请求
+## 方式二：多应用版
 
-## 🧪 测试通知
+适合一个 Worker 同时接多个 App。本仓库的 `wrangler.jsonc` 默认使用这个方式：
 
-### 使用内置测试页面
+```json
+"main": "index.js"
+```
 
-1. 在浏览器中访问你的 Worker URL（如 `https://revenuebell.你的用户名.workers.dev`）
-2. 页面会显示一个测试界面
-3. 点击 `发送测试通知` 按钮
-4. 检查你的 iPhone/Mac 是否收到 Bark 通知
+多应用版的通知 URL 必须带应用名：
 
-![测试页面](screenshots/6.jpg)
+```txt
+https://你的-worker.workers.dev/iRich
+https://你的-worker.workers.dev/iDeepa
+```
 
+### 多应用环境变量
 
-## 📱 通知效果
+最小配置：
 
-成功配置后，你会收到类似这样的通知：
+```txt
+APPS=iRich,iDeepa
+BARK_KEY=你的全局 Bark 推送 Key
+PRODUCT_NAME_iRich=iRich
+PRODUCT_NAME_iDeepa=iDeepa
+```
 
-<img src="screenshots/8.png" width="300" alt="通知效果" />
+按应用覆盖配置：
 
-## 🔍 查看日志
+```txt
+BARK_KEY_iRich=某个 App 单独的 Bark Key
+BARK_ICON_iRich=https://example.com/irich.png
+FORWARD_URL_iRich=https://example.com/webhook
+ENABLE_SANDBOX_iRich=true
+NOTIFICATION_CONFIG_iRich={"RISK":{"enabled":false}}
+```
+
+全局配置：
+
+```txt
+NOTIFICATION_CONFIG={"REVENUE":{"enabled":true},"REFUND":{"enabled":true},"RISK":{"enabled":true},"STATUS":{"enabled":true}}
+BARK_SOUND=sherwoodforest
+BARK_SOUND_REVENUE=calypso
+BARK_SOUND_REFUND=minuet
+BARK_SOUND_RISK=chord
+BARK_SOUND_STATUS=popcorn
+```
+
+配置优先级：
+
+```txt
+应用级变量 > 全局变量 > 代码默认值
+```
+
+## 通知类型开关
+
+四类通知默认都已启用。如果你想关闭某一类，用 `NOTIFICATION_CONFIG` 覆盖即可。
+
+全部开启：
+
+```txt
+NOTIFICATION_CONFIG={"REVENUE":{"enabled":true},"REFUND":{"enabled":true},"RISK":{"enabled":true},"STATUS":{"enabled":true}}
+```
+
+只关闭风险预警：
+
+```txt
+NOTIFICATION_CONFIG={"RISK":{"enabled":false}}
+```
+
+通知类型说明：
+
+| 类别 | 默认 | 说明 |
+| --- | --- | --- |
+| `REVENUE` | 开启 | 新订阅、续订、重新订阅、优惠购买、退款撤销等 |
+| `REFUND` | 开启 | 退款、消耗品退款请求、消耗品信息请求 |
+| `RISK` | 开启 | 续订失败、过期、宽限期结束、订阅撤销等 |
+| `STATUS` | 开启 | 自动续订开关变化、计划升降级、涨价状态、订阅延期等 |
+
+`NOTIFICATION_CONFIG` 还可以覆盖每类通知的图标、声音、分组：
+
+```txt
+NOTIFICATION_CONFIG={"REFUND":{"enabled":true,"sound":"minuet","group":"Refund"},"RISK":{"enabled":true,"sound":"chord","group":"Risk"}}
+```
+
+## 配置 App Store Connect
+
+1. 登录 App Store Connect：https://appstoreconnect.apple.com/
+2. 进入对应 App 的 `App 信息` -> `App Store 服务器通知`
+3. 填写生产服务器 URL 和沙盒服务器 URL
+4. 通知版本选择 `Version 2`
+
+单应用版填写 Worker 根路径：
+
+```txt
+https://你的-worker.workers.dev
+```
+
+多应用版填写带应用名的路径：
+
+```txt
+https://你的-worker.workers.dev/iRich
+```
+
+## 测试通知
+
+访问你的 Worker URL 会看到内置测试页面：
+
+- 单应用版：`https://你的-worker.workers.dev`
+- 多应用版：`https://你的-worker.workers.dev/iRich`
+
+点击 `发送测试通知`，检查 Bark 是否收到推送。
+
+## 查看日志
 
 在 Cloudflare Dashboard 中：
+
 1. 进入你的 Worker
-2. 点击 `Logs` → `Begin log stream`
-3. 实时查看所有请求和处理日志
+2. 点击 `Logs` -> `Begin log stream`
+3. 查看请求、事件类型、忽略原因和推送结果
 
-## 🙏 致谢
+## 注意事项
 
-- [Bark](https://github.com/Finb/Bark) - 优秀的 iOS 推送工具
-- [Cloudflare Workers](https://workers.cloudflare.com/) - 强大的边缘计算平台
+- 当前代码会解码 Apple 的 JWS payload，但没有做严格签名验证。
+- 如果只是给自己做收入提醒，这通常够用。
+- 如果要用通知结果给用户开通权益，建议增加 Apple JWS 签名验证和幂等处理。
+- `CONSUMPTION_REQUEST` 当前只会推送提醒，不会自动向 Apple 回填消费信息。
 
+## 致谢
+
+- [Bark](https://github.com/Finb/Bark)
+- [Cloudflare Workers](https://workers.cloudflare.com/)
